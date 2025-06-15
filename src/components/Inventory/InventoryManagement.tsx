@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, AlertTriangle, Package, ArrowUpDown, Eye, MoreVertical } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { GreenBean } from '../../types';
+import { FirestoreService } from '../../services/firestoreService';
 import AddBeanModal from './AddBeanModal';
 import EditBeanModal from './EditBeanModal';
 import StockMovementModal from './StockMovementModal';
@@ -9,7 +10,7 @@ import BeanDetailsModal from './BeanDetailsModal';
 
 export default function InventoryManagement() {
   const { state, dispatch } = useAppContext();
-  const { greenBeans } = state;
+  const { greenBeans, user } = state;
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMovementModal, setShowMovementModal] = useState(false);
@@ -50,9 +51,39 @@ export default function InventoryManagement() {
   const totalValue = greenBeans.reduce((sum, bean) => sum + (bean.quantity * bean.purchasePricePerKg), 0);
   const lowStockCount = greenBeans.filter(bean => bean.quantity <= bean.lowStockThreshold).length;
 
-  const handleDeleteBean = (id: string) => {
+  const handleDeleteBean = async (id: string) => {
+    if (!user) return;
+    
     if (window.confirm('Apakah Anda yakin ingin menghapus biji kopi ini?')) {
-      dispatch({ type: 'DELETE_GREEN_BEAN', payload: id });
+      try {
+        await FirestoreService.delete('greenBeans', id);
+        dispatch({ type: 'DELETE_GREEN_BEAN', payload: id });
+        
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            type: 'success',
+            title: 'Biji Kopi Dihapus',
+            message: 'Biji kopi berhasil dihapus dari inventori',
+            timestamp: new Date(),
+            read: false
+          }
+        });
+      } catch (error) {
+        console.error('Error deleting green bean:', error);
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: {
+            id: Date.now().toString(),
+            type: 'error',
+            title: 'Gagal Menghapus',
+            message: 'Terjadi kesalahan saat menghapus biji kopi',
+            timestamp: new Date(),
+            read: false
+          }
+        });
+      }
     }
   };
 
@@ -407,10 +438,6 @@ export default function InventoryManagement() {
       {showAddModal && (
         <AddBeanModal 
           onClose={() => setShowAddModal(false)} 
-          onAdd={(bean) => {
-            dispatch({ type: 'ADD_GREEN_BEAN', payload: bean });
-            setShowAddModal(false);
-          }}
         />
       )}
 
@@ -421,10 +448,38 @@ export default function InventoryManagement() {
             setShowEditModal(false);
             setSelectedBean(null);
           }}
-          onUpdate={(bean) => {
-            dispatch({ type: 'UPDATE_GREEN_BEAN', payload: bean });
-            setShowEditModal(false);
-            setSelectedBean(null);
+          onUpdate={async (bean) => {
+            try {
+              await FirestoreService.update('greenBeans', bean.id, bean);
+              dispatch({ type: 'UPDATE_GREEN_BEAN', payload: bean });
+              setShowEditModal(false);
+              setSelectedBean(null);
+              
+              dispatch({
+                type: 'ADD_NOTIFICATION',
+                payload: {
+                  id: Date.now().toString(),
+                  type: 'success',
+                  title: 'Biji Kopi Diperbarui',
+                  message: `${bean.variety} berhasil diperbarui`,
+                  timestamp: new Date(),
+                  read: false
+                }
+              });
+            } catch (error) {
+              console.error('Error updating green bean:', error);
+              dispatch({
+                type: 'ADD_NOTIFICATION',
+                payload: {
+                  id: Date.now().toString(),
+                  type: 'error',
+                  title: 'Gagal Memperbarui',
+                  message: 'Terjadi kesalahan saat memperbarui biji kopi',
+                  timestamp: new Date(),
+                  read: false
+                }
+              });
+            }
           }}
         />
       )}
