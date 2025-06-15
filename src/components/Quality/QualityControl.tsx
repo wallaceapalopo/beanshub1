@@ -113,7 +113,7 @@ export default function QualityControl() {
             <div>
               <p className="text-sm font-medium text-gray-600">Rata-rata Kualitas</p>
               <p className="text-xl lg:text-2xl font-bold text-gray-800">
-                {averageQuality.toFixed(1)}/5.0
+                {averageQuality.toFixed(1)}/8.0
               </p>
               <div className="flex items-center mt-1">
                 {[...Array(5)].map((_, i) => (
