@@ -8,6 +8,7 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   lastLogin: Date | null;
+  userId?: string; // For Firestore compatibility
 }
 
 export interface GreenBean {
@@ -20,6 +21,9 @@ export interface GreenBean {
   entryDate: Date;
   batchNumber: string;
   lowStockThreshold: number;
+  userId?: string; // For Firestore compatibility
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface RoastingProfile {
@@ -30,6 +34,8 @@ export interface RoastingProfile {
   notes: string;
   createdBy: string;
   createdAt: Date;
+  userId?: string; // For Firestore compatibility
+  updatedAt?: Date;
 }
 
 export interface RoastingSession {
@@ -43,6 +49,9 @@ export interface RoastingSession {
   qualityScore?: number;
   notes?: string;
   batchNumber: string;
+  userId?: string; // For Firestore compatibility
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Sale {
@@ -57,6 +66,9 @@ export interface Sale {
   customerPhone?: string;
   saleDate: Date;
   staffId: string;
+  userId?: string; // For Firestore compatibility
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PricingData {

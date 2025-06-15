@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { GreenBean } from '../../types';
+import { useAppContext } from '../../context/AppContext';
+import { FirestoreService } from '../../services/firestoreService';
 
 interface AddBeanModalProps {
   onClose: () => void;
-  onAdd: (bean: GreenBean) => void;
 }
 
-export default function AddBeanModal({ onClose, onAdd }: AddBeanModalProps) {
+export default function AddBeanModal({ onClose }: AddBeanModalProps) {
+  const { state, dispatch } = useAppContext();
+  const { user } = state;
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     supplierName: '',
     variety: '',
@@ -17,22 +21,61 @@ export default function AddBeanModal({ onClose, onAdd }: AddBeanModalProps) {
     lowStockThreshold: '50'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newBean: GreenBean = {
-      id: Date.now().toString(),
-      supplierName: formData.supplierName,
-      variety: formData.variety,
-      origin: formData.origin,
-      quantity: parseFloat(formData.quantity),
-      purchasePricePerKg: parseFloat(formData.purchasePricePerKg),
-      entryDate: new Date(),
-      batchNumber: `GB-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
-      lowStockThreshold: parseFloat(formData.lowStockThreshold)
-    };
+    if (!user) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const newBean: Omit<GreenBean, 'id'> = {
+        supplierName: formData.supplierName,
+        variety: formData.variety,
+        origin: formData.origin,
+        quantity: parseFloat(formData.quantity),
+        purchasePricePerKg: parseFloat(formData.purchasePricePerKg),
+        entryDate: new Date(),
+        batchNumber: `GB-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+        lowStockThreshold: parseFloat(formData.lowStockThreshold)
+      };
 
-    onAdd(newBean);
+      const id = await FirestoreService.createGreenBean(newBean, user.id);
+      
+      dispatch({ 
+        type: 'ADD_GREEN_BEAN', 
+        payload: { ...newBean, id } as GreenBean 
+      });
+
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: {
+          id: Date.now().toString(),
+          type: 'success',
+          title: 'Biji Kopi Ditambahkan',
+          message: `${newBean.variety} berhasil ditambahkan ke inventori`,
+          timestamp: new Date(),
+          read: false
+        }
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error adding green bean:', error);
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: {
+          id: Date.now().toString(),
+          type: 'error',
+          title: 'Gagal Menambahkan',
+          message: 'Terjadi kesalahan saat menambahkan biji kopi',
+          timestamp: new Date(),
+          read: false
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,14 +197,16 @@ export default function AddBeanModal({ onClose, onAdd }: AddBeanModalProps) {
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
+              disabled={isLoading}
             >
-              Tambah
+              {isLoading ? 'Menyimpan...' : 'Tambah'}
             </button>
           </div>
         </form>
