@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Star, Award, CheckCircle, AlertCircle, TrendingUp, Calendar, Filter } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
@@ -12,7 +12,7 @@ interface QualityScore {
   flavor: number; // 1-8
   acidity: number; // 1-8
   body: number; // 1-8
-  overall: number; // calculated average
+  overall: number; // calculated average based on 1-5 scale for display
   notes: string;
   evaluator: string;
   cupping: boolean;
@@ -25,8 +25,8 @@ export default function QualityControl() {
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [filterPeriod, setFilterPeriod] = useState('all');
 
-  // Mock quality scores data
-  const [qualityScores] = useState<QualityScore[]>([
+  // Mock quality scores data - now using setQualityScores
+  const [qualityScores, setQualityScores] = useState<QualityScore[]>([
     {
       id: '1',
       roastingSessionId: '1',
@@ -37,10 +37,25 @@ export default function QualityControl() {
       flavor: 4,
       acidity: 4,
       body: 4,
-      overall: 4.2,
+      overall: 4.2, // Adjusted to be on 1-5 scale for consistency with UI
       notes: 'Excellent balance, bright acidity with chocolate notes',
       evaluator: 'Master Roaster',
       cupping: true
+    },
+    {
+      id: '2',
+      roastingSessionId: '2',
+      beanVariety: 'Robusta Temanggung',
+      roastDate: new Date('2024-02-15'),
+      appearance: 3,
+      aroma: 3,
+      flavor: 3,
+      acidity: 2,
+      body: 4,
+      overall: 3.0,
+      notes: 'Strong and bold, low acidity.',
+      evaluator: 'Junior Roaster',
+      cupping: false
     }
   ]);
 
@@ -54,33 +69,41 @@ export default function QualityControl() {
     cupping: false
   });
 
-  const calculateOverallScore = () => {
+  // Calculates overall score on a 1-5 scale based on 5 criteria each 1-8
+  const calculateOverallScore = (): number => {
     const { appearance, aroma, flavor, acidity, body } = evaluationForm;
-    return ((appearance + aroma + flavor + acidity + body) / 8).toFixed(1);
+    const totalScoreOutOf40 = appearance + aroma + flavor + acidity + body;
+    // Scale total score (max 40) to a 1-5 range
+    return (totalScoreOutOf40 / 40) * 5;
   };
 
+  // Determines quality grade based on a 1-5 overall score
   const getQualityGrade = (score: number) => {
-    if (score >= 7.5) return { grade: 'Excellent', color: 'text-green-600', bg: 'bg-green-100' };
-    if (score >= 6.0) return { grade: 'Very Good', color: 'text-blue-600', bg: 'bg-blue-100' };
-    if (score >= 4.5) return { grade: 'Good', color: 'text-yellow-600', bg: 'bg-yellow-100' };
-    if (score >= 4.0) return { grade: 'Fair', color: 'text-orange-600', bg: 'bg-orange-100' };
+    if (score >= 4.5) return { grade: 'Excellent', color: 'text-green-600', bg: 'bg-green-100' };
+    if (score >= 3.5) return { grade: 'Very Good', color: 'text-blue-600', bg: 'bg-blue-100' };
+    if (score >= 2.5) return { grade: 'Good', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+    if (score >= 1.5) return { grade: 'Fair', color: 'text-orange-600', bg: 'bg-orange-100' };
     return { grade: 'Poor', color: 'text-red-600', bg: 'bg-red-100' };
   };
 
   const handleSubmitEvaluation = () => {
+    const session = roastingSessions.find(s => s.id === selectedSession);
+    const bean = greenBeans.find(b => b.id === session?.greenBeanId);
+
     const newScore: QualityScore = {
       id: Date.now().toString(),
       roastingSessionId: selectedSession,
-      beanVariety: roastingSessions.find(s => s.id === selectedSession)?.greenBeanId || '',
+      beanVariety: bean?.variety || 'Unknown Variety', // Correctly get bean variety
       roastDate: new Date(),
       ...evaluationForm,
-      overall: parseFloat(calculateOverallScore()),
+      overall: parseFloat(calculateOverallScore().toFixed(1)), // Ensure overall is number and formatted
       evaluator: user?.name || 'Unknown'
     };
 
-    // In a real app, this would be dispatched to the context
+    setQualityScores([...qualityScores, newScore]); // Add new score
     console.log('New quality score:', newScore);
     setShowEvaluationModal(false);
+    setSelectedSession(''); // Clear selected session after submission
     setEvaluationForm({
       appearance: 3,
       aroma: 3,
@@ -92,12 +115,29 @@ export default function QualityControl() {
     });
   };
 
-  const averageQuality = qualityScores.length > 0 
-    ? qualityScores.reduce((sum, score) => sum + score.overall, 0) / qualityScores.length 
+  // Filtered quality scores based on filterPeriod
+  const filteredQualityScores = useMemo(() => {
+    const now = new Date();
+    return qualityScores.filter(score => {
+      const roastDate = new Date(score.roastDate); // Ensure roastDate is Date object
+      if (filterPeriod === 'week') {
+        const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+        return roastDate >= sevenDaysAgo;
+      }
+      if (filterPeriod === 'month') {
+        return roastDate.getMonth() === now.getMonth() && roastDate.getFullYear() === now.getFullYear();
+      }
+      return true; // 'all' period
+    });
+  }, [qualityScores, filterPeriod]);
+
+  const averageQuality = filteredQualityScores.length > 0
+    ? filteredQualityScores.reduce((sum, score) => sum + score.overall, 0) / filteredQualityScores.length
     : 0;
 
-  const excellentBatches = qualityScores.filter(score => score.overall >= 4.5).length;
-  const cuppingScores = qualityScores.filter(score => score.cupping);
+  // Excellent batches are now based on the 1-5 scale
+  const excellentBatches = filteredQualityScores.filter(score => score.overall >= 4.5).length;
+  const cuppingScores = filteredQualityScores.filter(score => score.cupping);
 
   return (
     <div className="p-4 lg:p-6 bg-gray-50 min-h-screen">
@@ -113,13 +153,13 @@ export default function QualityControl() {
             <div>
               <p className="text-sm font-medium text-gray-600">Rata-rata Kualitas</p>
               <p className="text-xl lg:text-2xl font-bold text-gray-800">
-                {averageQuality.toFixed(1)}/8.0
+                {averageQuality.toFixed(1)}/5.0
               </p>
               <div className="flex items-center mt-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className={`h-4 w-4 ${i < Math.floor(averageQuality) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${i < Math.floor(averageQuality) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                   />
                 ))}
               </div>
@@ -133,7 +173,7 @@ export default function QualityControl() {
             <div>
               <p className="text-sm font-medium text-gray-600">Batch Excellent</p>
               <p className="text-xl lg:text-2xl font-bold text-green-600">{excellentBatches}</p>
-              <p className="text-sm text-gray-500">≥ 7.5 rating</p>
+              <p className="text-sm text-gray-500">≥ 4.5 rating</p>
             </div>
             <CheckCircle className="h-6 w-6 lg:h-8 lg:w-8 text-green-500" />
           </div>
@@ -143,7 +183,7 @@ export default function QualityControl() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Evaluasi</p>
-              <p className="text-xl lg:text-2xl font-bold text-gray-800">{qualityScores.length}</p>
+              <p className="text-xl lg:text-2xl font-bold text-gray-800">{filteredQualityScores.length}</p>
             </div>
             <div className="h-6 w-6 lg:h-8 lg:w-8 bg-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xs lg:text-sm">#</span>
@@ -209,7 +249,7 @@ export default function QualityControl() {
         <div className="px-4 lg:px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800">Riwayat Evaluasi Kualitas</h3>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -235,16 +275,16 @@ export default function QualityControl() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {qualityScores.length === 0 ? (
+              {filteredQualityScores.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 lg:px-6 py-8 text-center text-gray-500">
                     <Star className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>Belum ada evaluasi kualitas</p>
-                    <p className="text-sm">Mulai evaluasi batch roasting Anda</p>
+                    <p>Belum ada evaluasi kualitas untuk periode ini.</p>
+                    <p className="text-sm">Mulai evaluasi batch roasting Anda.</p>
                   </td>
                 </tr>
               ) : (
-                qualityScores.map((score) => {
+                filteredQualityScores.map((score) => {
                   const grade = getQualityGrade(score.overall);
                   return (
                     <tr key={score.id} className="hover:bg-gray-50">
@@ -280,9 +320,9 @@ export default function QualityControl() {
                           </span>
                           <div className="flex">
                             {[...Array(5)].map((_, i) => (
-                              <Star 
-                                key={i} 
-                                className={`h-4 w-4 ${i < Math.floor(score.overall) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${i < Math.floor(score.overall) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                               />
                             ))}
                           </div>
@@ -323,12 +363,12 @@ export default function QualityControl() {
               {/* Overall Score Display */}
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <h3 className="text-lg font-semibold text-blue-800 mb-2">Overall Score</h3>
-                <div className="text-3xl font-bold text-blue-600">{calculateOverallScore()}/8.0</div>
+                <div className="text-3xl font-bold text-blue-600">{calculateOverallScore().toFixed(1)}/5.0</div>
                 <div className="flex justify-center mt-2">
-                  {[...Array(8)].map((_, i) => (8
-                    <Star 
-                      key={i} 
-                      className={`h-6 w-6 ${i < Math.floor(parseFloat(calculateOverallScore())) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-6 w-6 ${i < Math.floor(calculateOverallScore()) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                     />
                   ))}
                 </div>
@@ -352,7 +392,7 @@ export default function QualityControl() {
                       <input
                         type="range"
                         min="1"
-                        max="5"
+                        max="8" // Changed max to 8 as per interface
                         value={evaluationForm[criteria.key as keyof typeof evaluationForm] as number}
                         onChange={(e) => setEvaluationForm({
                           ...evaluationForm,
@@ -361,7 +401,7 @@ export default function QualityControl() {
                         className="flex-1"
                       />
                       <span className="text-lg font-semibold text-gray-800 w-8">
-                        {evaluationForm[criteria.key as keyof typeof evaluationForm]}
+                        {evaluationForm[criteria.key as keyof typeof evaluationForm]}/8
                       </span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-400">
