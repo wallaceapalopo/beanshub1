@@ -60,10 +60,10 @@ export default function QualityControl() {
   };
 
   const getQualityGrade = (score: number) => {
-    if (score >= 4.5) return { grade: 'Excellent', color: 'text-green-600', bg: 'bg-green-100' };
-    if (score >= 4.0) return { grade: 'Very Good', color: 'text-blue-600', bg: 'bg-blue-100' };
-    if (score >= 3.5) return { grade: 'Good', color: 'text-yellow-600', bg: 'bg-yellow-100' };
-    if (score >= 3.0) return { grade: 'Fair', color: 'text-orange-600', bg: 'bg-orange-100' };
+    if (score >= 7.5) return { grade: 'Excellent', color: 'text-green-600', bg: 'bg-green-100' };
+    if (score >= 6.0) return { grade: 'Very Good', color: 'text-blue-600', bg: 'bg-blue-100' };
+    if (score >= 4.5) return { grade: 'Good', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+    if (score >= 4.0) return { grade: 'Fair', color: 'text-orange-600', bg: 'bg-orange-100' };
     return { grade: 'Poor', color: 'text-red-600', bg: 'bg-red-100' };
   };
 
