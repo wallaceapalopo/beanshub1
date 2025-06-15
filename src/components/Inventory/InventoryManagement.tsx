@@ -1,23 +1,45 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, AlertTriangle, Package } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, AlertTriangle, Package, ArrowUpDown } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { GreenBean } from '../../types';
 import AddBeanModal from './AddBeanModal';
+import StockMovementModal from './StockMovementModal';
 
 export default function InventoryManagement() {
   const { state, dispatch } = useAppContext();
   const { greenBeans } = state;
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMovementModal, setShowMovementModal] = useState(false);
+  const [selectedBean, setSelectedBean] = useState<GreenBean | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'quantity' | 'date'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const filteredBeans = greenBeans.filter(bean =>
-    bean.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bean.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bean.origin.toLowerCase().includes(searchTerm.toLowerCase())
-  ).filter(bean =>
-    filterOrigin === '' || bean.origin.includes(filterOrigin)
-  );
+  const filteredBeans = greenBeans
+    .filter(bean =>
+      bean.variety.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bean.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bean.origin.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter(bean =>
+      filterOrigin === '' || bean.origin.includes(filterOrigin)
+    )
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = a.variety.localeCompare(b.variety);
+          break;
+        case 'quantity':
+          comparison = a.quantity - b.quantity;
+          break;
+        case 'date':
+          comparison = a.entryDate.getTime() - b.entryDate.getTime();
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
   const origins = [...new Set(greenBeans.map(bean => bean.origin))];
   const totalValue = greenBeans.reduce((sum, bean) => sum + (bean.quantity * bean.purchasePricePerKg), 0);
@@ -26,6 +48,20 @@ export default function InventoryManagement() {
   const handleDeleteBean = (id: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus biji kopi ini?')) {
       dispatch({ type: 'DELETE_GREEN_BEAN', payload: id });
+    }
+  };
+
+  const handleStockMovement = (bean: GreenBean) => {
+    setSelectedBean(bean);
+    setShowMovementModal(true);
+  };
+
+  const toggleSort = (field: 'name' | 'quantity' | 'date') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
     }
   };
 
@@ -101,6 +137,26 @@ export default function InventoryManagement() {
                 {origins.map(origin => (
                   <option key={origin} value={origin}>{origin}</option>
                 ))}
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Urutkan:</span>
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split('-');
+                  setSortBy(field as 'name' | 'quantity' | 'date');
+                  setSortOrder(order as 'asc' | 'desc');
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              >
+                <option value="name-asc">Nama A-Z</option>
+                <option value="name-desc">Nama Z-A</option>
+                <option value="quantity-asc">Stok Terendah</option>
+                <option value="quantity-desc">Stok Tertinggi</option>
+                <option value="date-desc">Terbaru</option>
+                <option value="date-asc">Terlama</option>
               </select>
             </div>
           </div>
@@ -183,12 +239,20 @@ export default function InventoryManagement() {
                   </td>
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-amber-600 hover:text-amber-900">
+                      <button 
+                        onClick={() => handleStockMovement(bean)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Pergerakan Stok"
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                      </button>
+                      <button className="text-amber-600 hover:text-amber-900" title="Edit">
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
                         onClick={() => handleDeleteBean(bean.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="Hapus"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -207,6 +271,16 @@ export default function InventoryManagement() {
           onAdd={(bean) => {
             dispatch({ type: 'ADD_GREEN_BEAN', payload: bean });
             setShowAddModal(false);
+          }}
+        />
+      )}
+
+      {showMovementModal && selectedBean && (
+        <StockMovementModal
+          bean={selectedBean}
+          onClose={() => {
+            setShowMovementModal(false);
+            setSelectedBean(null);
           }}
         />
       )}
