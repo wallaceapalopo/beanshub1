@@ -133,7 +133,7 @@ export default function QualityControl() {
             <div>
               <p className="text-sm font-medium text-gray-600">Batch Excellent</p>
               <p className="text-xl lg:text-2xl font-bold text-green-600">{excellentBatches}</p>
-              <p className="text-sm text-gray-500">≥ 4.5 rating</p>
+              <p className="text-sm text-gray-500">≥ 7.5 rating</p>
             </div>
             <CheckCircle className="h-6 w-6 lg:h-8 lg:w-8 text-green-500" />
           </div>
