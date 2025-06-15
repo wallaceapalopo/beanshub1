@@ -7,11 +7,11 @@ interface QualityScore {
   roastingSessionId: string;
   beanVariety: string;
   roastDate: Date;
-  appearance: number; // 1-5
-  aroma: number; // 1-5
-  flavor: number; // 1-5
-  acidity: number; // 1-5
-  body: number; // 1-5
+  appearance: number; // 1-8
+  aroma: number; // 1-8
+  flavor: number; // 1-8
+  acidity: number; // 1-8
+  body: number; // 1-8
   overall: number; // calculated average
   notes: string;
   evaluator: string;
