@@ -3,8 +3,11 @@ export interface User {
   email: string;
   name: string;
   role: 'Admin' | 'Roaster' | 'Staff';
+  phone?: string;
   profileImage?: string;
+  isActive: boolean;
   createdAt: Date;
+  lastLogin: Date | null;
 }
 
 export interface GreenBean {

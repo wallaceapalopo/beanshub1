@@ -3,6 +3,7 @@ import { User, GreenBean, RoastingProfile, RoastingSession, Sale, Notification }
 
 interface AppState {
   user: User | null;
+  users: User[];
   greenBeans: GreenBean[];
   roastingProfiles: RoastingProfile[];
   roastingSessions: RoastingSession[];
@@ -14,6 +15,9 @@ interface AppState {
 type AppAction = 
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'ADD_USER'; payload: User }
+  | { type: 'UPDATE_USER'; payload: User }
+  | { type: 'DELETE_USER'; payload: string }
   | { type: 'ADD_GREEN_BEAN'; payload: GreenBean }
   | { type: 'UPDATE_GREEN_BEAN'; payload: GreenBean }
   | { type: 'DELETE_GREEN_BEAN'; payload: string }
@@ -27,6 +31,47 @@ type AppAction =
 
 const initialState: AppState = {
   user: null,
+  users: [
+    {
+      id: '1',
+      email: 'admin@beanshub.com',
+      name: 'Admin BeansHub',
+      role: 'Admin',
+      phone: '+62 812 4100 3047',
+      isActive: true,
+      createdAt: new Date('2024-01-01'),
+      lastLogin: new Date()
+    },
+    {
+      id: '2',
+      email: 'roaster@beanshub.com',
+      name: 'Master Roaster',
+      role: 'Roaster',
+      phone: '+62 821 5555 1234',
+      isActive: true,
+      createdAt: new Date('2024-01-05'),
+      lastLogin: new Date('2024-01-28')
+    },
+    {
+      id: '3',
+      email: 'staff@beanshub.com',
+      name: 'Staff Penjualan',
+      role: 'Staff',
+      phone: '+62 856 7777 9999',
+      isActive: true,
+      createdAt: new Date('2024-01-10'),
+      lastLogin: new Date('2024-01-27')
+    },
+    {
+      id: '4',
+      email: 'inactive@beanshub.com',
+      name: 'User Nonaktif',
+      role: 'Staff',
+      isActive: false,
+      createdAt: new Date('2024-01-15'),
+      lastLogin: null
+    }
+  ],
   greenBeans: [
     {
       id: '1',
@@ -90,7 +135,7 @@ const initialState: AppState = {
       roastedQuantity: 40,
       profileId: '1',
       roastDate: new Date('2024-01-28'),
-      roasterId: '1',
+      roasterId: '2',
       notes: 'Perfect roast, good color development',
       batchNumber: 'RS-2024-001'
     }
@@ -107,7 +152,7 @@ const initialState: AppState = {
       customerName: 'Cafe Arabica',
       customerPhone: '081234567890',
       saleDate: new Date('2024-01-29'),
-      staffId: '1'
+      staffId: '3'
     }
   ],
   notifications: [
@@ -129,6 +174,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, user: action.payload };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
+    case 'ADD_USER':
+      return { ...state, users: [...state.users, action.payload] };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        users: state.users.map(user =>
+          user.id === action.payload.id ? action.payload : user
+        )
+      };
+    case 'DELETE_USER':
+      return {
+        ...state,
+        users: state.users.filter(user => user.id !== action.payload)
+      };
     case 'ADD_GREEN_BEAN':
       return { ...state, greenBeans: [...state.greenBeans, action.payload] };
     case 'UPDATE_GREEN_BEAN':

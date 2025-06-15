@@ -16,6 +16,7 @@ import PricingCalculator from './components/Pricing/PricingCalculator';
 import SalesManagement from './components/Sales/SalesManagement';
 import FinancialReports from './components/Reports/FinancialReports';
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
+import UserManagement from './components/Users/UserManagement';
 import SystemSettings from './components/Settings/SystemSettings';
 
 function AppContent() {
@@ -45,7 +46,7 @@ function AppContent() {
               <Route path="/sales" element={<SalesManagement />} />
               <Route path="/reports" element={<FinancialReports />} />
               <Route path="/analytics" element={<AnalyticsDashboard />} />
-              <Route path="/users" element={<div className="p-4 lg:p-6"><h1 className="text-2xl font-bold">Manajemen User</h1><p className="text-gray-600">Coming soon...</p></div>} />
+              <Route path="/users" element={<UserManagement />} />
               <Route path="/settings" element={<SystemSettings />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
