@@ -1,4 +1,4 @@
-🫘 BeansHub – Aplikasi Manajemen Roastery Terintegrasi
+## 🫘 BeansHub – Aplikasi Manajemen Roastery Terintegrasi
 BeansHub adalah platform digital cerdas untuk membantu coffee house roastery kecil-menengah dalam mengelola seluruh proses bisnis — dari pengadaan green bean, proses roasting, hingga penjualan dan pelaporan keuangan, secara otomatis dan real-time.
 
 🔒 Teknologi Inti
