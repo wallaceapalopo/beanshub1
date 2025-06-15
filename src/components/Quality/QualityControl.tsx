@@ -56,7 +56,7 @@ export default function QualityControl() {
 
   const calculateOverallScore = () => {
     const { appearance, aroma, flavor, acidity, body } = evaluationForm;
-    return ((appearance + aroma + flavor + acidity + body) / 5).toFixed(1);
+    return ((appearance + aroma + flavor + acidity + body) / 8).toFixed(1);
   };
 
   const getQualityGrade = (score: number) => {
