@@ -1,7 +1,7 @@
 ## 🫘 BeansHub – Aplikasi Manajemen Roastery Terintegrasi
 BeansHub adalah platform digital cerdas untuk membantu coffee house roastery kecil-menengah dalam mengelola seluruh proses bisnis — dari pengadaan green bean, proses roasting, hingga penjualan dan pelaporan keuangan, secara otomatis dan real-time.
 
-🔒 Teknologi Inti
+# 🔒 Teknologi Inti
 Database: Firestore (Cloud Firestore – NoSQL realtime database dari Google)
 
 Authentication: Google Sign-In / Firebase Authentication
@@ -10,7 +10,7 @@ Arsitektur: Modular, terintegrasi otomatis antar fitur
 
 Real-Time Update: Setiap perubahan data langsung tercermin di seluruh sistem
 
-🎯 Modul Utama & Alur Terintegrasi
+# 🎯 Modul Utama & Alur Terintegrasi
 1. Modul Manajemen Stok Bahan Baku (Green Bean)
 Tujuan: Memastikan ketersediaan stok bahan baku secara akurat.
 
@@ -130,7 +130,7 @@ Aset: stok & kas
 
 Kewajiban & ekuitas
 
-⚙️ Alur Integrasi Otomatis (Sirkulasi Data)
+# ⚙️ Alur Integrasi Otomatis (Sirkulasi Data)
 Stok Green Bean Masuk → Modul Roasting
 
 Roasting → Otomatis update stok roasted bean + Log roasting
