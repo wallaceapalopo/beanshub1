@@ -266,11 +266,11 @@ export default function QualityControl() {
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                         <div className="text-xs text-gray-600 space-y-1">
-                          <div>Appearance: {score.appearance}/5</div>
-                          <div>Aroma: {score.aroma}/5</div>
-                          <div>Flavor: {score.flavor}/5</div>
-                          <div>Acidity: {score.acidity}/5</div>
-                          <div>Body: {score.body}/5</div>
+                          <div>Appearance: {score.appearance}/8</div>
+                          <div>Aroma: {score.aroma}/8</div>
+                          <div>Flavor: {score.flavor}/8</div>
+                          <div>Acidity: {score.acidity}/8</div>
+                          <div>Body: {score.body}/8</div>
                         </div>
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
@@ -323,9 +323,9 @@ export default function QualityControl() {
               {/* Overall Score Display */}
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <h3 className="text-lg font-semibold text-blue-800 mb-2">Overall Score</h3>
-                <div className="text-3xl font-bold text-blue-600">{calculateOverallScore()}/5.0</div>
+                <div className="text-3xl font-bold text-blue-600">{calculateOverallScore()}/8.0</div>
                 <div className="flex justify-center mt-2">
-                  {[...Array(5)].map((_, i) => (
+                  {[...Array(8)].map((_, i) => (8
                     <Star 
                       key={i} 
                       className={`h-6 w-6 ${i < Math.floor(parseFloat(calculateOverallScore())) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
